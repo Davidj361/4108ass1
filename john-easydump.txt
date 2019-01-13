@@ -1,0 +1,14 @@
+student@comp4108-a1:~/JohnTheRipper-unstable-jumbo/run$ ./john --wordlist=password.lst /A1/easy_dump
+Loaded 10 password hashes with 10 different salts (FreeBSD MD5 [128/128 SSE2 intrinsics 20x])
+123456789        (steveaustin)
+123456           (therock)
+password         (johncena)
+12345            (undertaker)
+abc123           (reymysterio)
+12345678         (tripleh)
+letmein          (goldberg)
+iloveyou         (ricflair)
+princess         (hogan)
+1234567          (randyorton)
+guesses: 10  time: 0:00:00:00 DONE (Fri Jan 11 16:32:29 2019)  c/s: 12750  trying: viper1 - adidas
+Use the "--show" option to display all of the cracked passwords reliably

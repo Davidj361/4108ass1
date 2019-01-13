@@ -1,0 +1,9 @@
+Part 1
+======
+
+easy_dump shows $1$ at the start which means that the passwords are in MD5 (https://www.cyberciti.biz/faq/understanding-etcshadow-file/)
+$id$salt$hashed is the format for the password field
+The salt is used to help make the hash of the password different and protect the password against dictionary attacks.
+
+easy_dump was easily cracked by running john with the given password.list on /A1/easy_dump
+./john --wordlist=password.lst /A1/easy_dump
