@@ -1,0 +1,42 @@
+student@comp4108-a1:~/JohnTheRipper-unstable-jumbo/run$ ./john --wordlist=password.lst /A1/medium_dump
+Loaded 10 password hashes with 10 different salts (FreeBSD MD5 [128/128 SSE2 intrinsics 20x])
+passw0rd         (undertaker)
+guesses: 1  time: 0:00:00:01 DONE (Fri Jan 11 16:35:05 2019)  c/s: 26735  trying: dirk - sss
+Use the "--show" option to display all of the cracked passwords reliably
+
+student@comp4108-a1:~/JohnTheRipper-unstable-jumbo/run$ ./john --wordlist=/usr/share/dict/words /A1/medium_dump
+Loaded 10 password hashes with 10 different salts (FreeBSD MD5 [128/128 SSE2 intrinsics 20x])
+Remaining 9 password hashes with 9 different salts
+Minnesota        (steveaustin)
+Rosalind         (goldberg)
+chamber          (hogan)
+differential     (therock)
+senators         (johncena)
+guesses: 5  time: 0:00:00:21 DONE (Mon Jan 14 11:31:45 2019)  c/s: 25686  trying: études
+Use the "--show" option to display all of the cracked passwords reliably
+
+student@comp4108-a1:~/JohnTheRipper-unstable-jumbo/run$ ./john --wordlist=/usr/share/dict/words --rules:Jumbo /A1/medium_dump
+Loaded 10 password hashes with 10 different salts (FreeBSD MD5 [128/128 SSE2 intrinsics 20x])
+Remaining 4 password hashes with 4 different salts
+soccer9          (tripleh)
+salamander?      (ricflair)
+num3ral          (randyorton)
+guesses: 3  time: 0:04:12:41 19.94% (ETA: Tue Jan 15 09:43:59 2019)  c/s: 26265  trying: jockeyingzs - jodhpurs'szs
+guesses: 3  time: 0:04:12:45 19.95% (ETA: Tue Jan 15 09:43:41 2019)  c/s: 26265  trying: monkey'szt - monogamyzt
+guesses: 3  time: 0:04:12:50 19.96% (ETA: Tue Jan 15 09:43:28 2019)  c/s: 26265  trying: aristophaneszv - arkansaszv
+guesses: 3  time: 0:04:12:52 19.96% (ETA: Tue Jan 15 09:43:38 2019)  c/s: 26265  trying: intimatezv - intolerantzv
+guesses: 3  time: 0:05:37:56 28.01% (ETA: Tue Jan 15 08:43:13 2019)  c/s: 25871  trying: SqUeAKiESt - SqUiGGlES
+guesses: 3  time: 0:06:46:44 DONE (Mon Jan 14 19:23:29 2019)  c/s: 25568  trying: WHIPPERSNAPPER - YOUTHFULNESS'S
+Use the "--show" option to display all of the cracked passwords reliably
+student@comp4108-a1:~/JohnTheRipper-unstable-jumbo/run$ ./john --show /A1/medium_dump
+johncena:senators:1002:1002::/home/johncena:/bin/sh
+therock:differential:1003:1003::/home/therock:/bin/sh
+undertaker:passw0rd:1004:1004::/home/undertaker:/bin/sh
+ricflair:salamander?:1005:1005::/home/ricflair:/bin/sh
+steveaustin:Minnesota:1006:1006::/home/steveaustin:/bin/sh
+hogan:chamber:1007:1007::/home/hogan:/bin/sh
+randyorton:num3ral:1008:1008::/home/randyorton:/bin/sh
+goldberg:Rosalind:1009:1009::/home/goldberg:/bin/sh
+tripleh:soccer9:1010:1010::/home/tripleh:/bin/sh
+
+9 password hashes cracked, 1 left

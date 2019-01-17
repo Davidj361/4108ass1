@@ -1,9 +1,15 @@
+// C++ stuff
 #include <iostream>
 #include <fstream>
-#include <unistd.h>
 #include <string>
-#include <sys/stat.h>
+#include <csignal> // For making breakpoints for debugging
+// C stuff
 #include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#define BUFSIZE 2048
 
 // 1st argument is the program name
 // 2nd argument is the file to crack
@@ -11,46 +17,31 @@
 int main(int argc, char *argv[]) {
   if (argc < 2) {
     std::cout << "Need the input file to crack" << std::endl;
-    return 1;
+    return -1;
   }
   std::string inFile = argv[1];
   std::string decodedFile = inFile + ".decoded";
   std::string decryptedFile = inFile + ".decrypted";
 
-  // std::ofstream outfile;
-  // outfile.open(decodedFilePath);
+  // TODO delete or replace the file. as of now it doesn't do anything if the file already exists
+  int fdDecodedFile = open(decodedFile.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+  std::string base64CMD = "base64 -d " + inFile; // e.g. base64 -d practice_file.aes256. > /tmp/in2
+  FILE* fBase64 = popen(base64CMD.c_str(), "r");
+  if (fBase64 == NULL) {
+    std::cout << "fBase64 is a null pointer" << std::endl;
+    return -1;
+  }
+  int fdBase64 = fileno(fBase64);
 
-  int fd = open(decodedFile.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-  // base64 -d practice_file.aes256. > /tmp/in2
-  char *base64[] = {
-    "base64",
-    "-d",
-    (char*) inFile.c_str(),
-    0
-  };
-  // Maybe use posix_spawn instead?
   std::cout << "writing to: " + decodedFile << std::endl;
-  dup2(fd,1);
-  dup2(fd,2);
-  execvp(base64[0], base64);
-  close(fd);
+  char buf[BUFSIZE];
+  while (read(fdBase64, buf, BUFSIZE) > 0) {
+    write(fdDecodedFile, buf, BUFSIZE);
+  }
 
-  // openssl enc -d -aes256 -in /tmp/in2 -out /tmp/test2
-  char *openssl[] = {
-    "openssl",
-    "enc",
-    "-d",
-    "-aes256",
-    "-in",
-    (char*) decodedFile.c_str(),
-    "-out",
-    (char*) decryptedFile.c_str(),
-    0
-  };
-  fd = open(decryptedFile.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+  pclose(fBase64);
+  return 0;
+
+  // openssl enc -d -aes256 -in /tmp/in -out /tmp/test
   std::cout << "writing to: " + decryptedFile << std::endl;
-  dup2(fd,1);
-  dup2(fd,2);
-  execvp(openssl[0], openssl);
-  close(fd);
 }
