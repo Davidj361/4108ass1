@@ -6,12 +6,14 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <signal.h> // For making breakpoints for debugging
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #define DIRECTORY "/tmp/"
+#define BUFSIZE 1024
 
 // 1st argument is the program name
 // 2nd argument is the file to crack
@@ -25,16 +27,17 @@ int main(int argc, char *argv[]) {
   std::string inFileBase = basename((char*)inFile.c_str());
   std::string decodedFile = DIRECTORY + inFileBase + ".decoded";
   std::string decryptedFile = DIRECTORY + inFileBase + ".decrypted";
-  char* line = NULL;
-  size_t lineSize = 0;
+  std::string pass = "lolsecret";
   int fd[2];
+  char* buf[BUFSIZE];
   if (pipe(fd) == -1) {
     std::cout << "Bad pipe creation" << std::endl;
     exit(1);
   }
 
-  int fdDecodedFile = open(decodedFile.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
   std::string base64CMD = "base64 -d " + inFile + " > " + decodedFile; // e.g. base64 -d practice_file.aes256. > /tmp/in2
+  // openssl enc -d -aes256 -in /tmp/practice_file.aes256.nohash.txt.decoded -out /tmp/1 -pass pass:lolsecret
+  std::string opensslCMD = "openssl enc -d -aes256 -in " + decodedFile + " -out " + decryptedFile + " -pass pass:" + pass;
 
   std::cout << "writing to: " + decodedFile << std::endl;
   FILE* fBase64 = popen(base64CMD.c_str(), "w");
@@ -44,15 +47,21 @@ int main(int argc, char *argv[]) {
   }
   pclose(fBase64);
 
+  std::cout << "writing to: " + decryptedFile << std::endl;
+  FILE* fOpenssl = popen(opensslCMD.c_str(), "w");
+  if (fBase64 == NULL) {
+    std::cout << "fOpenssl is a null pointer" << std::endl;
+    exit(1);
+  }
+  pclose(fOpenssl);
+
+  /*
   int pid = fork();
 
   if (pid < 0) {
     std::cout << "Fork failed" << std::endl;
     exit(1);
   } else if (pid == 0) { // the child
-    int fdDecryptedFile = open(decryptedFile.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    dup2(fd[0], 0);
-    dup2(fd[1], 1);
     char* args[] = {
       "openssl",
       "enc",
@@ -64,13 +73,25 @@ int main(int argc, char *argv[]) {
       (char*) decryptedFile.c_str(),
       0
     };
-    
+    std::cout << "hi" << std::endl;
+    std::cout << fd[1] << std::endl;
+    dup2(fd[0], STDIN_FILENO);
+    dup2(fd[1], STDOUT_FILENO);
+    std::cout << "hi2" << std::endl;
+    std::cout << fd[1] << std::endl;
+    // close(STDIN_FILENO);
+    // close(STDOUT_FILENO);
+    // close(STDERR_FILENO);
     execvp(args[0], args);
-    // fputs("lolsecret\r", fOpenssl);
   } else {
     int status;
     std::cout << "writing to: " + decryptedFile << std::endl;
-    waitpid(pid, &status, 0); // wait for the child to finish
+    // while (read(fd[1], buf, BUFSIZE) > 0) {
+    //   std::cout << "works" << std::endl;
+    //   std::cout << buf << std::endl;
+    // }
+    waitpid(pid, &status, 0);
   }
+  */
 
 }
