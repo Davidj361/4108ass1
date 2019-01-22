@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   std::cout << "writing to: " + passFile << std::endl;
   FILE* fMd5 = popen(md5CMD.c_str(), "w");
   if (fMd5 == NULL) {
-    std::cout << "fBase64 is a null pointer" << std::endl;
+    std::cout << "fMd5 is a null pointer" << std::endl;
     exit(1);
   }
   pclose(fMd5);
