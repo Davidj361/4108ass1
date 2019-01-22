@@ -19,25 +19,25 @@
 // 3rd argument is output
 int main(int argc, char *argv[]) {
   // TODO: check for substring "bad decrypt" from openssl if it's a bad pass
-  if (argc < 2) {
-    std::cout << "Need the input file to crack" << std::endl;
+  if (argc < 4) {
+    std::cout << "arguments: (inputfile) (john) (wordlist)" << std::endl;
     return -1;
   }
   std::string inFile = argv[1];
+  std::string john = argv[2];
+  std::string wordlist = argv[3];
   std::string inFileBase = basename((char*)inFile.c_str());
   std::string decodedFile = DIRECTORY + inFileBase + ".decoded";
   std::string decryptedFile = DIRECTORY + inFileBase + ".decrypted";
   std::string passFile = DIRECTORY + inFileBase + ".hash";
-  std::string pass = "lolsecret";
   std::string passHash = "";
   char* buf = 0;
   size_t bufSize;
+  char* passbuf = 0;
+  size_t passbufSize;
 
-
-  int fdDecodedFile = open(decodedFile.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
   std::string base64CMD = "base64 -d " + inFile + " > " + decodedFile; // e.g. base64 -d practice_file.aes256. > /tmp/in2
-  std::string md5CMD = "echo -n " + pass + " | md5sum > " + passFile;
-  // openssl enc -d -aes256 -in /tmp/practice_file.aes256.nohash.txt.decoded -out /tmp/1 -pass pass:lolsecret
+  std::string johnCMD = john + " --wordlist=" + wordlist + " --rules=single --stdout";
 
   std::cout << "writing to: " + decodedFile << std::endl;
   FILE* fBase64 = popen(base64CMD.c_str(), "w");
@@ -47,59 +47,39 @@ int main(int argc, char *argv[]) {
   }
   pclose(fBase64);
 
-  std::cout << "writing to: " + passFile << std::endl;
-  FILE* fMd5 = popen(md5CMD.c_str(), "w");
-  if (fMd5 == NULL) {
-    std::cout << "fMd5 is a null pointer" << std::endl;
-    exit(1);
-  }
-  pclose(fMd5);
+  FILE* fJohn = popen(johnCMD.c_str(), "r");
+  while ( getline(&passbuf, &passbufSize, fJohn) != -1) {
+    passbuf[passbufSize-2] = '\0';
+    std::string pass = passbuf;
+    std::cout << "trying password: " << pass << std::endl;
+    std::string md5CMD = "echo -n " + pass + " | md5sum > " + passFile;
 
-  FILE* fPassFile = fopen(passFile.c_str(), "r");
-  if (getdelim(&buf, &bufSize, ' ', fPassFile) == -1) {
-    std::cout << "bad fPassFile read" << std::endl;
-    exit(1);
-  }
-  std::string opensslCMD = "openssl enc -d -aes256 -in " + decodedFile + " -out " + decryptedFile + " -pass pass:" + buf;
-  free(buf);
-  fclose(fPassFile);
+    std::cout << "writing to: " + passFile << std::endl;
+    FILE* fMd5 = popen(md5CMD.c_str(), "w");
+    if (fMd5 == NULL) {
+      std::cout << "fMd5 is a null pointer" << std::endl;
+      exit(1);
+    }
+    pclose(fMd5);
 
-  std::cout << "writing to: " + decryptedFile << std::endl;
-  FILE* fOpenssl = popen(opensslCMD.c_str(), "w");
-  if (fBase64 == NULL) {
-    std::cout << "fOpenssl is a null pointer" << std::endl;
-    exit(1);
-  }
-  pclose(fOpenssl);
+    FILE* fPassFile = fopen(passFile.c_str(), "r");
+    if (getdelim(&buf, &bufSize, ' ', fPassFile) == -1) {
+      std::cout << "bad fPassFile read" << std::endl;
+      exit(1);
+    }
+    // openssl enc -d -aes256 -in /tmp/practice_file.aes256.nohash.txt.decoded -out /tmp/1 -pass pass:lolsecret
+    std::string opensslCMD = "openssl enc -d -aes256 -in " + decodedFile + " -out " + decryptedFile + " -pass pass:" + buf;
+    free(buf);
+    fclose(fPassFile);
 
-  /*
-  int pid = fork();
-
-  if (pid < 0) {
-    std::cout << "Fork failed" << std::endl;
-    exit(1);
-  } else if (pid == 0) { // the child
-    int fdDecryptedFile = open(decryptedFile.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    dup2(fd[0], 0);
-    dup2(fd[1], 1);
-    char* args[] = {
-      "openssl",
-      "enc",
-      "-d",
-      "-aes256",
-      "-in",
-      (char*) decodedFile.c_str(),
-      "-out",
-      (char*) decryptedFile.c_str(),
-      0
-    };
-    
-    execvp(args[0], args);
-    // fputs("lolsecret\r", fOpenssl);
-  } else {
-    int status;
     std::cout << "writing to: " + decryptedFile << std::endl;
-    waitpid(pid, &status, 0); // wait for the child to finish
+    FILE* fOpenssl = popen(opensslCMD.c_str(), "w");
+    if (fBase64 == NULL) {
+      std::cout << "fOpenssl is a null pointer" << std::endl;
+      exit(1);
+    }
+    pclose(fOpenssl);
   }
-  */
+  free(passbuf);
+  pclose(fJohn);
 }
