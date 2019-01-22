@@ -30,7 +30,6 @@ int main(int argc, char *argv[]) {
   std::string decodedFile = DIRECTORY + inFileBase + ".decoded";
   std::string decryptedFile = DIRECTORY + inFileBase + ".decrypted";
   std::string passFile = DIRECTORY + inFileBase + ".hash";
-  std::string passHash = "";
   char* buf = 0;
   size_t bufSize;
   char* passbuf = 0;
@@ -49,8 +48,8 @@ int main(int argc, char *argv[]) {
 
   FILE* fJohn = popen(johnCMD.c_str(), "r");
   while ( getline(&passbuf, &passbufSize, fJohn) != -1) {
-    passbuf[passbufSize-2] = '\0';
     std::string pass = passbuf;
+    pass[pass.length()-1] = '\0';
     std::cout << "trying password: " << pass << std::endl;
     std::string md5CMD = "echo -n " + pass + " | md5sum > " + passFile;
 
