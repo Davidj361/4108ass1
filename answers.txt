@@ -7,3 +7,16 @@ The salt is used to help make the hash of the password different and protect the
 
 easy_dump was easily cracked by running john with the given password.list on /A1/easy_dump
 ./john --wordlist=password.lst /A1/easy_dump
+
+medium_dump
+===========
+Using: `~./john --wordlist=password.lst /A1/medium_dump` only cracked 1 password, I needed to specify rules to crack the rest of the passwords.
+Using: `./john --wordlist=/usr/share/dict/words --rules:Jumbo /A1/medium_dump` ended with only 9/10 of the passwords cracked in total.
+
+hard_dump
+=========
+Using: `./john --wordlist=/usr/share/dict/words --rules:Jumbo /A1/hard_dump` only cracked 2 of the passwords:
+minnesota.       (reymysterio)
+minnesot         (ricflair)
+Even when it ran for 2 days.
+

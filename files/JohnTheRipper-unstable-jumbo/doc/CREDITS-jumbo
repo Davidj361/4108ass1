@@ -1,0 +1,76 @@
+The following people have contributed between 1.7.9-jumbo-7 and jumbo-8:
+
+    Alain Espinosa
+    Alexander Cherepanov
+    alexandru
+    bartavelle (Simon Marechal)
+    bwall
+    bytebieger
+    Camille Mougey
+    Claudio André
+    Costin Enache
+    Deepika Dutta
+    Dhiru Kholia
+    Diogo Ramos
+    Frank Dittrich
+    JimF
+    Julien Perrot
+    Linus Lüssing
+    Lukas Odzioba
+    magnum
+    Mat G
+    Michael Ledford
+    Michael Samuel
+    Milen Rangelov
+    Myrice
+    Narendra Kangralkar
+    rofl0r
+    Sam Novak
+    Sayantan Datta
+    ShaneQful (Shane Quigley)
+    Solar
+    Tavis Ormandy
+    tomrittervg
+    Vlatko Kosturjak
+
+
+The following people have contributed between 1.7.9-jumbo-6 and jumbo-7:
+
+    Claudio André
+    Dhiru Kholia
+    Elijah [W&P]
+    Erik Winkler
+    Frank Dittrich
+    JimF
+    Knug Carl Gustf
+    Lukas Odzioba
+    magnum
+    Myrice
+    Pavel Semjanov
+    Sayantan Datta
+    Solar
+    Tavis Ormandy
+    Vlatko Kosturjak
+
+
+The following people have contributed between 1.7.9-jumbo-5 and jumbo-6:
+
+    András
+    bartavelle (Simon Marechal)
+    bizonix
+    Claudio André
+    Dhiru Kholia
+    Frank Dittrich
+    JimF
+    Lukas Odzioba
+    magnum
+    Myrice (Dongdong Li)
+    Robert Veznaver
+    Samuele Giovanni Tonon
+    Sayantan Datta
+    sftp (Sergey V)
+    Solar Designer (Alexander Peslyak)
+    Tavis Ormandy
+
+---
+git shortlog -ns --no-merges 1.7.9-jumbo-7..HEAD | cut -f2- | sort -f

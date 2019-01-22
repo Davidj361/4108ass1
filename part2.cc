@@ -2,9 +2,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <csignal> // For making breakpoints for debugging
 // C stuff
 #include <fcntl.h>
+#include <libgen.h>
+#include <signal.h> // For making breakpoints for debugging
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -16,17 +17,21 @@
 // 2nd argument is the file to crack
 // 3rd argument is output
 int main(int argc, char *argv[]) {
-  // TODO don't make the file outputted by folder included in argument
   if (argc < 2) {
     std::cout << "Need the input file to crack" << std::endl;
     return -1;
   }
   std::string inFile = argv[1];
-  std::string decodedFile = DIRECTORY + inFile + ".decoded";
-  std::string decryptedFile = DIRECTORY + inFile + ".decrypted";
+  std::string inFileBase = basename((char*)inFile.c_str());
+  std::string decodedFile = DIRECTORY + inFileBase + ".decoded";
+  std::string decryptedFile = DIRECTORY + inFileBase + ".decrypted";
   char* line = NULL;
   size_t lineSize = 0;
   int fd[2];
+  if (pipe(fd) == -1) {
+    std::cout << "Bad pipe creation" << std::endl;
+    exit(1);
+  }
 
   int fdDecodedFile = open(decodedFile.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
   std::string base64CMD = "base64 -d " + inFile + " > " + decodedFile; // e.g. base64 -d practice_file.aes256. > /tmp/in2
@@ -59,14 +64,12 @@ int main(int argc, char *argv[]) {
       (char*) decryptedFile.c_str(),
       0
     };
-    // openssl enc -d -aes256 -in /tmp/in -out /tmp/test
-    // std::string opensslCMD = "openssl enc -d -aes256 -in " + decodedFile + " -out " + decryptedFile;
-    std::cout << "writing to: " + decryptedFile << std::endl;
     
     execvp(args[0], args);
     // fputs("lolsecret\r", fOpenssl);
   } else {
     int status;
+    std::cout << "writing to: " + decryptedFile << std::endl;
     waitpid(pid, &status, 0); // wait for the child to finish
   }
 

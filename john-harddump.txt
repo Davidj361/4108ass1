@@ -1,0 +1,39 @@
+student@comp4108-a1:~/JohnTheRipper-unstable-jumbo/run$ ./john --wordlist=/usr/share/dict/words --rules:Jumbo /A1/hard_dump
+Loaded 10 password hashes with 10 different salts (FreeBSD MD5 [128/128 SSE2 intrinsics 20x])
+minnesota.       (reymysterio)
+minnesot         (ricflair)
+guesses: 2  time: 0:20:09:09 12.50% (ETA: Mon Jan 21 12:43:27 2019)  c/s: 24649  trying: Immolating118 - Immune118
+guesses: 2  time: 0:22:15:28 13.60% (ETA: Mon Jan 21 15:09:51 2019)  c/s: 24571  trying: Trobriand's362 - Truffaut's362
+guesses: 2  time: 0:22:21:27 13.65% (ETA: Mon Jan 21 15:17:42 2019)  c/s: 24569  trying: Recipe373 - Recitations373
+guesses: 2  time: 0:22:21:28 13.65% (ETA: Mon Jan 21 15:17:49 2019)  c/s: 24569  trying: Roundish373 - Rout's373
+guesses: 2  time: 0:22:21:29 13.65% (ETA: Mon Jan 21 15:17:57 2019)  c/s: 24569  trying: Shelter's373 - Sherbert's373
+guesses: 2  time: 0:22:21:33 13.65% (ETA: Mon Jan 21 15:18:26 2019)  c/s: 24569  trying: Updraft's373 - Uphold373
+guesses: 2  time: 0:22:21:43 13.65% (ETA: Mon Jan 21 15:19:39 2019)  c/s: 24568  trying: Calipered374 - Call's374
+guesses: 2  time: 0:22:21:44 13.65% (ETA: Mon Jan 21 15:19:46 2019)  c/s: 24568  trying: Clout374 - Clowning374
+guesses: 2  time: 0:22:21:45 13.65% (ETA: Mon Jan 21 15:19:54 2019)  c/s: 24568  trying: Creak's374 - Creaminess's374
+guesses: 2  time: 0:22:21:46 13.65% (ETA: Mon Jan 21 15:20:01 2019)  c/s: 24568  trying: Devout374 - Dewy374
+guesses: 2  time: 0:22:21:47 13.65% (ETA: Mon Jan 21 15:20:08 2019)  c/s: 24568  trying: Egged374 - Ego374
+guesses: 2  time: 0:22:21:48 13.65% (ETA: Mon Jan 21 15:20:16 2019)  c/s: 24568  trying: Fastener's374 - Fatalism's374
+guesses: 2  time: 0:22:22:06 13.66% (ETA: Mon Jan 21 15:15:16 2019)  c/s: 24568  trying: Blanchard's375 - Blondel's375
+guesses: 2  time: 0:22:22:16 13.66% (ETA: Mon Jan 21 15:16:29 2019)  c/s: 24568  trying: Croup375 - Crown375
+guesses: 2  time: 0:22:22:18 13.66% (ETA: Mon Jan 21 15:16:44 2019)  c/s: 24568  trying: Embodying375 - Embroideries375
+guesses: 2  time: 0:22:29:25 13.72% (ETA: Mon Jan 21 15:25:37 2019)  c/s: 24565  trying: Abducted389 - Abetter's389
+guesses: 2  time: 0:22:29:27 13.72% (ETA: Mon Jan 21 15:25:52 2019)  c/s: 24565  trying: Bilingual389 - Billfold389
+guesses: 2  time: 0:22:29:29 13.72% (ETA: Mon Jan 21 15:26:07 2019)  c/s: 24565  trying: Clippers389 - Cloakroom's389
+guesses: 2  time: 0:22:29:31 13.72% (ETA: Mon Jan 21 15:26:21 2019)  c/s: 24565  trying: Destination389 - Destruct's389
+guesses: 2  time: 0:22:29:32 13.72% (ETA: Mon Jan 21 15:26:28 2019)  c/s: 24565  trying: Earmuff's389 - Earplug389
+guesses: 2  time: 0:22:29:33 13.72% (ETA: Mon Jan 21 15:26:36 2019)  c/s: 24565  trying: Fabricated389 - Facet389
+guesses: 2  time: 0:22:29:35 13.72% (ETA: Mon Jan 21 15:26:50 2019)  c/s: 24565  trying: Gurney389 - Gusseted389
+guesses: 2  time: 0:22:29:36 13.72% (ETA: Mon Jan 21 15:26:58 2019)  c/s: 24565  trying: Idealizing389 - Ideograph389
+guesses: 2  time: 0:22:29:37 13.72% (ETA: Mon Jan 21 15:27:05 2019)  c/s: 24565  trying: Jitterbug389 - Jobber389
+guesses: 2  time: 0:22:29:38 13.72% (ETA: Mon Jan 21 15:27:12 2019)  c/s: 24565  trying: Longhorns389 - Lookalikes389
+guesses: 2  time: 0:22:29:41 13.72% (ETA: Mon Jan 21 15:27:34 2019)  c/s: 24565  trying: Peeling389 - Peerages389
+guesses: 2  time: 0:22:29:42 13.72% (ETA: Mon Jan 21 15:27:41 2019)  c/s: 24565  trying: Predator's389 - Predicated389
+guesses: 2  time: 0:22:29:43 13.72% (ETA: Mon Jan 21 15:27:49 2019)  c/s: 24565  trying: Rearing389 - Reasoned389
+guesses: 2  time: 1:16:14:59 24.20% (ETA: Mon Jan 21 17:49:26 2019)  c/s: 24292  trying: jblunderbuss'sz - jblurbz
+guesses: 2  time: 1:16:15:04 24.20% (ETA: Mon Jan 21 17:49:46 2019)  c/s: 24292  trying: jegoz - jegotistsz
+guesses: 2  time: 1:18:19:24 25.24% (ETA: Mon Jan 21 19:11:10 2019)  c/s: 24270  trying: scrudeness'sx - scruetsx
+guesses: 2  time: 1:19:40:03 25.93% (ETA: Mon Jan 21 19:54:29 2019)  c/s: 24267  trying: yreparteet - yrepeal'st
+guesses: 2  time: 1:19:40:05 25.93% (ETA: Mon Jan 21 19:54:36 2019)  c/s: 24267  trying: yslamst - yslantst
+guesses: 2  time: 2:07:24:44 DONE (Thu Jan 17 02:54:52 2019)  c/s: 24237  trying: WHIPPERSNAPPER - YOUTHFULNESS'S
+Use the "--show" option to display all of the cracked passwords reliably
