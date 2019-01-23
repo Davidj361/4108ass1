@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <algorithm>
 // C stuff
 #include <fcntl.h>
 #include <libgen.h>
@@ -14,9 +15,15 @@
 
 #define DIRECTORY "/tmp/"
 
+bool isFileExist(const char* path) {
+  std::ifstream infile(path);
+  return infile.good();
+}
+
 // 1st argument is the program name
 // 2nd argument is the file to crack
 // 3rd argument is output
+// 4th argument is the wordlist to crack with
 int main(int argc, char *argv[]) {
   // TODO: check for substring "bad decrypt" from openssl if it's a bad pass
   if (argc < 4) {
@@ -49,7 +56,8 @@ int main(int argc, char *argv[]) {
   FILE* fJohn = popen(johnCMD.c_str(), "r");
   while ( getline(&passbuf, &passbufSize, fJohn) != -1) {
     std::string pass = passbuf;
-    pass[pass.length()-1] = '\0'; // remove new line
+    // pass[pass.length()-1] = '\0'; // breaks commands
+    pass.erase(std::remove(pass.begin(), pass.end(), '\n'), pass.end());
     std::cout << "trying password: " << pass << std::endl;
     std::string md5CMD = "echo -n " + pass + " | md5sum > " + passFile;
 
@@ -67,7 +75,7 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     std::string hash = buf;
-    hash[hash.length()-1] = '\0'; // remove new line
+    hash.erase(std::remove(hash.begin(), hash.end(), '\n'), hash.end());
     // openssl enc -d -aes256 -in /tmp/practice_file.aes256.nohash.txt.decoded -out /tmp/1 -pass pass:lolsecret
     std::string opensslCMD = "openssl enc -d -aes256 -in " + decodedFile + " -out " + decryptedFile + " -pass pass:" + hash;
     fclose(fPassFile);
@@ -79,6 +87,12 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     pclose(fOpenssl);
+
+    if (isFileExist(decryptedFile.c_str())) {
+      std::cout << "file decrypted!" << std::endl;
+      std::cout << "found the password: " << pass << std::endl;
+      break;
+    }
   }
   pclose(fJohn);
 }
