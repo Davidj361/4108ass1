@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   FILE* fJohn = popen(johnCMD.c_str(), "r");
   while ( getline(&passbuf, &passbufSize, fJohn) != -1) {
     std::string pass = passbuf;
-    pass[pass.length()-1] = '\0';
+    pass[pass.length()-1] = '\0'; // remove new line
     std::cout << "trying password: " << pass << std::endl;
     std::string md5CMD = "echo -n " + pass + " | md5sum > " + passFile;
 
@@ -66,9 +66,10 @@ int main(int argc, char *argv[]) {
       std::cout << "bad fPassFile read" << std::endl;
       exit(1);
     }
+    std::string hash = buf;
+    hash[hash.length()-1] = '\0'; // remove new line
     // openssl enc -d -aes256 -in /tmp/practice_file.aes256.nohash.txt.decoded -out /tmp/1 -pass pass:lolsecret
-    std::string opensslCMD = "openssl enc -d -aes256 -in " + decodedFile + " -out " + decryptedFile + " -pass pass:" + buf;
-    free(buf);
+    std::string opensslCMD = "openssl enc -d -aes256 -in " + decodedFile + " -out " + decryptedFile + " -pass pass:" + hash;
     fclose(fPassFile);
 
     std::cout << "writing to: " + decryptedFile << std::endl;
@@ -79,6 +80,5 @@ int main(int argc, char *argv[]) {
     }
     pclose(fOpenssl);
   }
-  free(passbuf);
   pclose(fJohn);
 }
