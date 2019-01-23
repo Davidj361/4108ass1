@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
   std::string decodedFile = DIRECTORY + inFileBase + ".decoded";
   std::string decryptedFile = DIRECTORY + inFileBase + ".decrypted";
   std::string passFile = DIRECTORY + inFileBase + ".hash";
+  std::string checkPass = DIRECTORY + inFileBase + ".check";
   char* buf = 0;
   size_t bufSize;
   char* passbuf = 0;
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]) {
     std::string hash = buf;
     hash.erase(std::remove(hash.begin(), hash.end(), '\n'), hash.end());
     // openssl enc -d -aes256 -in /tmp/practice_file.aes256.nohash.txt.decoded -out /tmp/1 -pass pass:lolsecret
-    std::string opensslCMD = "openssl enc -d -aes256 -in " + decodedFile + " -out " + decryptedFile + " -pass pass:" + hash;
+    std::string opensslCMD = "openssl enc -d -aes256 -in " + decodedFile + " -out " + decryptedFile + " -pass pass:" + hash + " > '" + checkPass + "' 2>&1";
     fclose(fPassFile);
 
     std::cout << "writing to: " + decryptedFile << std::endl;
@@ -88,11 +89,22 @@ int main(int argc, char *argv[]) {
     }
     pclose(fOpenssl);
 
-    if (isFileExist(decryptedFile.c_str())) {
-      std::cout << "file decrypted!" << std::endl;
-      std::cout << "found the password: " << pass << std::endl;
+    // Bad ways to check bad password: getline from the command or seeing if decrypt file exists. Both ways failed
+    // "'bad decrypt' should be the first line"
+    if (pass == "access")
+      raise(SIGINT);
+    FILE* fOpensslcheck = fopen(checkPass.c_str(), "r");
+    if ( getline(&buf, &bufSize, fOpensslcheck) == -1) {
+      std::cout << "bad fOpensslcheck read" << std::endl;
+      exit(1);
+    }
+    std::string check = buf;
+    fclose(fOpensslcheck);
+    std::cout << check << std::endl;
+
+    if (check.find("bad decrypt") == std::string::npos) { 
+      std::cout << "Found the password: " << pass << std::endl;
       break;
     }
   }
-  pclose(fJohn);
 }
