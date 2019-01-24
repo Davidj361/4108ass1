@@ -33,6 +33,8 @@ int decrypt(std::string inFile, std::string decryptedFile, std::string hash) {
       (char*) "openssl",
       (char*) "aes256",
       (char*) "-base64",
+      (char*) "-md",
+      (char*) "md5",
       (char*) "-d",
       (char*) "-in",
       (char*) inFile.c_str(),
@@ -69,7 +71,7 @@ bool isDecrypted(std::string file) {
   }
   if (buf != NULL) {
     free(buf);
-    buf = 0;
+    buf = NULL;
   }
   pclose(fFile);
   return ret;
@@ -89,19 +91,17 @@ int main(int argc, char *argv[]) {
   std::string wordlist = argv[3];
   std::string inFileBase = basename((char*)inFile.c_str());
   std::string decryptedFile = DIRECTORY + inFileBase + ".decrypted";
-  std::string validPassFile = DIRECTORY + inFileBase + ".validpass";
   std::string passFile = DIRECTORY + inFileBase + ".hash";
-  std::string pass;
+  std::string plainPassFile = DIRECTORY + inFileBase + ".pass";
   std::string checkPass = DIRECTORY + inFileBase + ".check";
+  std::string pass;
   char* buf = 0;
   size_t bufSize;
   char* passbuf = 0;
   size_t passbufSize;
   bool found = false;
   int ret = 0;
-  int parentfd[2];
   int childfd[2];
-  pipe(parentfd);
   pipe(childfd);
 
   std::string johnCMD = john + " --wordlist=" + wordlist + " --rules=single --stdout";
@@ -147,15 +147,20 @@ int main(int argc, char *argv[]) {
       }
 
       pass.erase(std::remove(pass.begin(), pass.end(), '\n'), pass.end());
-      std::string p = "'" + pass + "'";
-      std::string md5CMD = "echo -n " + p + " | md5sum > " + passFile;
+      std::ofstream tmp;
+      tmp.open(plainPassFile.c_str(), std::ofstream::out);
+      tmp << pass;
+      tmp.close();
+      std::string md5CMD = "cat " + plainPassFile + " | md5sum > " + passFile;
 
       FILE* fMd5 = popen(md5CMD.c_str(), "r");
       if (fMd5 == NULL) {
         std::cout << "fMd5 is a null pointer" << std::endl;
         exit(1);
       }
-      pclose(fMd5);
+      if(pclose(fMd5) != 0) {
+        std::cout << "MD5 exited poorly. cmd str is: " << md5CMD << std::endl;
+      }
 
       FILE* fPassFile = fopen(passFile.c_str(), "r");
       if (getdelim(&buf, &bufSize, ' ', fPassFile) == -1) {
@@ -165,7 +170,7 @@ int main(int argc, char *argv[]) {
       std::string hash = buf;
       if (buf != NULL) {
         free(buf);
-        buf = 0;
+        buf = NULL;
       }
       hash.erase(std::remove(hash.begin(), hash.end(), '\n'), hash.end());
       hash.erase(std::remove(hash.begin(), hash.end(), ' '), hash.end());
@@ -179,16 +184,13 @@ int main(int argc, char *argv[]) {
         break;
       }
     }
+    close(childfd[0]);
 
     if (found) {
       std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
       std::cout << "Decrypted and found the password: " << pass << std::endl;
       std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
       ret = 0;
-      std::ofstream out;
-      out.open(validPassFile.c_str(), std::ofstream::out);
-      out << pass << std::endl;
-      out.close();
     } else {
       std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
       std::cout << "Couldn't find the password" << std::endl;
