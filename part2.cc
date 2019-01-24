@@ -99,65 +99,102 @@ int main(int argc, char *argv[]) {
   size_t passbufSize;
   bool found = false;
   int ret = 0;
+  int parentfd[2];
+  int childfd[2];
+  pipe(parentfd);
+  pipe(childfd);
 
   std::string johnCMD = john + " --wordlist=" + wordlist + " --rules=single --stdout";
   // std::string johnCMD = john + " --wordlist=" + wordlist + " --stdout";
-  FILE* fJohn = popen(johnCMD.c_str(), "r");
-  while ( getline(&passbuf, &passbufSize, fJohn) != -1) {
-    pass = passbuf;
-    if (passbuf != NULL) {
-      free(passbuf);
-      passbuf = 0;
-    }
-    pass.erase(std::remove(pass.begin(), pass.end(), '\n'), pass.end());
-    std::string p = "'" + pass + "'";
-    std::string md5CMD = "echo -n " + p + " | md5sum > " + passFile;
 
-    FILE* fMd5 = popen(md5CMD.c_str(), "r");
-    if (fMd5 == NULL) {
-      std::cout << "fMd5 is a null pointer" << std::endl;
-      exit(1);
-    }
-    pclose(fMd5);
-
-    FILE* fPassFile = fopen(passFile.c_str(), "r");
-    if (getdelim(&buf, &bufSize, ' ', fPassFile) == -1) {
-      std::cout << "bad fPassFile read" << std::endl;
-      exit(1);
-    }
-    std::string hash = buf;
-    if (buf != NULL) {
-      free(buf);
-      buf = 0;
-    }
-    hash.erase(std::remove(hash.begin(), hash.end(), '\n'), hash.end());
-    hash.erase(std::remove(hash.begin(), hash.end(), ' '), hash.end());
-    fclose(fPassFile);
-
-    int status = decrypt(inFile, decryptedFile, hash);
-    if (status != 0)
-      continue;
-    if (isDecrypted(decryptedFile)) {
-      found = true;
-      break;
-    }
-  }
-  fclose(fJohn);
-
-  if (found) {
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    std::cout << "Decrypted and found the password: " << pass << std::endl;
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    ret = 0;
-    std::ofstream out;
-    out.open(validPassFile.c_str(), std::ofstream::out);
-    out << pass << std::endl;
-    out.close();
+  // Was going to synchronize input with the parent and the child john the ripper
+  // But I believe the command finishes instantly and it is not easy
+  // to synchronize the parent and child for each exhaustive word search
+  // since the child instantly finishes executing and goes out of sync with the parent anyways
+  pid_t pid = fork();
+  if (pid < 0) {
+    std::cout << "fork broke in decrypt function" << std::endl;
+    exit(1);
+  } else if (pid == 0) { // child
+    std::string wordlistArg = "--wordlist=" + wordlist;
+    char* args[] = {
+      (char*) john.c_str(),
+      (char*) wordlistArg.c_str(),
+      (char*) "--rules=single",
+      (char*) "--stdout",
+      NULL
+    };
+    dup2(childfd[1], STDOUT_FILENO);
+    // NEED TO CLOSE PIPES OR ELSE IT HANGS
+    close(childfd[0]);
+    close(childfd[1]);
+    execvp(args[0], args);
+    perror("bad exec");
+    exit(1);
   } else {
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    std::cout << "Couldn't find the password" << std::endl;
-    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    ret = 1;
+    // NEED TO CLOSE PIPES OR ELSE IT HANGS
+    close(childfd[1]);
+    // char buf2[1024];
+    // size_t buf2Size = 1024;
+    // size_t n;
+    // while ( n = read(childfd[0], &buf2, buf2Size), n > 0) { // alternative reading
+    FILE* test = fdopen(childfd[0], "r");
+    while ( getline(&passbuf, &passbufSize, test) != -1) {
+      pass = passbuf;
+      if (passbuf != NULL) {
+        free(passbuf);
+        passbuf = NULL;
+      }
+
+      pass.erase(std::remove(pass.begin(), pass.end(), '\n'), pass.end());
+      std::string p = "'" + pass + "'";
+      std::string md5CMD = "echo -n " + p + " | md5sum > " + passFile;
+
+      FILE* fMd5 = popen(md5CMD.c_str(), "r");
+      if (fMd5 == NULL) {
+        std::cout << "fMd5 is a null pointer" << std::endl;
+        exit(1);
+      }
+      pclose(fMd5);
+
+      FILE* fPassFile = fopen(passFile.c_str(), "r");
+      if (getdelim(&buf, &bufSize, ' ', fPassFile) == -1) {
+        std::cout << "bad fPassFile read" << std::endl;
+        exit(1);
+      }
+      std::string hash = buf;
+      if (buf != NULL) {
+        free(buf);
+        buf = 0;
+      }
+      hash.erase(std::remove(hash.begin(), hash.end(), '\n'), hash.end());
+      hash.erase(std::remove(hash.begin(), hash.end(), ' '), hash.end());
+      fclose(fPassFile);
+
+      int status = decrypt(inFile, decryptedFile, hash);
+      if (status != 0)
+        continue;
+      if (isDecrypted(decryptedFile)) {
+        found = true;
+        break;
+      }
+    }
+
+    if (found) {
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+      std::cout << "Decrypted and found the password: " << pass << std::endl;
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+      ret = 0;
+      std::ofstream out;
+      out.open(validPassFile.c_str(), std::ofstream::out);
+      out << pass << std::endl;
+      out.close();
+    } else {
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+      std::cout << "Couldn't find the password" << std::endl;
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+      ret = 1;
+    }
+    return ret;
   }
-  return ret;
 }
