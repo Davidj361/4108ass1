@@ -22,9 +22,9 @@ bool isFileExist(const char* path) {
 }
 
 int decrypt(std::string inFile, std::string decryptedFile, std::string hash) {
-  std::string opensslCMD = "openssl aes256 -base64 -d -in " + inFile + " -out " + decryptedFile + " -k " + hash;
+  std::string opensslCMD = "openssl aes256 -base64 -d -in " + inFile + " -out " + decryptedFile + " -k " + hash + "> /dev/null 2>&1";
+  // std::string opensslCMD = "openssl aes256 -base64 -d -in " + inFile + " -out " + decryptedFile + " -k " + hash;
 
-  std::cout << "writing to: " + decryptedFile << std::endl;
   FILE* fOpenssl = popen(opensslCMD.c_str(), "w");
   if (fOpenssl == NULL) {
     std::cout << "fOpenssl is a null pointer" << std::endl;
@@ -48,16 +48,19 @@ bool isDecrypted(std::string file) {
     if (output.find("UTF-8") != std::string::npos)
       ret = true;
   }
+  if (buf != NULL) {
+    free(buf);
+    buf = 0;
+  }
   pclose(fFile);
   return ret;
 }
 
 // 1st argument is the program name
 // 2nd argument is the file to crack
-// 3rd argument is output
+// 3rd argument is the john executable
 // 4th argument is the wordlist to crack with
 int main(int argc, char *argv[]) {
-  // TODO: check for substring "bad decrypt" from openssl if it's a bad pass
   if (argc < 4) {
     std::cout << "arguments: (inputfile) (john) (wordlist)" << std::endl;
     return -1;
@@ -67,28 +70,30 @@ int main(int argc, char *argv[]) {
   std::string wordlist = argv[3];
   std::string inFileBase = basename((char*)inFile.c_str());
   std::string decryptedFile = DIRECTORY + inFileBase + ".decrypted";
+  std::string validPassFile = DIRECTORY + inFileBase + ".validpass";
   std::string passFile = DIRECTORY + inFileBase + ".hash";
+  std::string pass;
   std::string checkPass = DIRECTORY + inFileBase + ".check";
   char* buf = 0;
   size_t bufSize;
   char* passbuf = 0;
   size_t passbufSize;
-  // apparently openssl will think another hash is a successful
-  // decrypt but in actuality it is not
-  // So a count is needed to keep all "decrypted" files where the user
-  // manually checks the files to see if they look decrypted
-  int count = 0;
+  bool found = false;
+  int ret = 0;
 
+  // NOTE john doesn't try the word as is in the wordlist when in single rules mode
   std::string johnCMD = john + " --wordlist=" + wordlist + " --rules=single --stdout";
+  // std::string johnCMD = john + " --wordlist=" + wordlist + " --stdout";
   FILE* fJohn = popen(johnCMD.c_str(), "r");
   while ( getline(&passbuf, &passbufSize, fJohn) != -1) {
-    std::string pass = passbuf;
-    // pass[pass.length()-1] = '\0'; // breaks commands
+    pass = passbuf;
+    if (passbuf != NULL) {
+      free(passbuf);
+      passbuf = 0;
+    }
     pass.erase(std::remove(pass.begin(), pass.end(), '\n'), pass.end());
-    std::cout << "trying password: " << pass << std::endl;
     std::string md5CMD = "echo -n " + pass + " | md5sum > " + passFile;
 
-    std::cout << "writing to: " + passFile << std::endl;
     FILE* fMd5 = popen(md5CMD.c_str(), "w");
     if (fMd5 == NULL) {
       std::cout << "fMd5 is a null pointer" << std::endl;
@@ -102,15 +107,38 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     std::string hash = buf;
+    if (buf != NULL) {
+      free(buf);
+      buf = 0;
+    }
     hash.erase(std::remove(hash.begin(), hash.end(), '\n'), hash.end());
     hash.erase(std::remove(hash.begin(), hash.end(), ' '), hash.end());
     fclose(fPassFile);
 
-    decrypt(inFile, decryptedFile, hash);
-    if (!isDecrypted(decryptedFile))
+    int status = decrypt(inFile, decryptedFile, hash);
+    if (status != 0)
       continue;
-
-    std::cout << "Decrypted and found the password: " << pass << std::endl;
-    break;
+    if (isDecrypted(decryptedFile)) {
+      found = true;
+      break;
+    }
   }
+  fclose(fJohn);
+
+  if (found) {
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+    std::cout << "Decrypted and found the password: " << pass << std::endl;
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+    ret = 0;
+    std::ofstream out;
+    out.open(validPassFile.c_str(), std::ofstream::out);
+    out << pass << std::endl;
+    out.close();
+  } else {
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+    std::cout << "Couldn't find the password" << std::endl;
+    std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+    ret = 1;
+  }
+  return ret;
 }
