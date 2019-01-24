@@ -9,6 +9,7 @@
 #include <libgen.h>
 #include <signal.h> // For making breakpoints for debugging
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -22,15 +23,33 @@ bool isFileExist(const char* path) {
 }
 
 int decrypt(std::string inFile, std::string decryptedFile, std::string hash) {
-  std::string opensslCMD = "openssl aes256 -base64 -d -in " + inFile + " -out " + decryptedFile + " -k " + hash + "> /dev/null 2>&1";
-  // std::string opensslCMD = "openssl aes256 -base64 -d -in " + inFile + " -out " + decryptedFile + " -k " + hash;
-
-  FILE* fOpenssl = popen(opensslCMD.c_str(), "w");
-  if (fOpenssl == NULL) {
-    std::cout << "fOpenssl is a null pointer" << std::endl;
+  int ret;
+  pid_t pid = fork();
+  if (pid < 0) {
+    std::cout << "fork broke in decrypt function" << std::endl;
     exit(1);
+  } else if (pid == 0) { // child
+    char* args[] = {
+      (char*) "openssl",
+      (char*) "aes256",
+      (char*) "-base64",
+      (char*) "-d",
+      (char*) "-in",
+      (char*) inFile.c_str(),
+      (char*) "-out",
+      (char*) decryptedFile.c_str(),
+      (char*) "-k",
+      (char*) hash.c_str(),
+      NULL
+    };
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+    execvp(args[0], args);
+  } else {
+    waitpid(pid, &ret, 0);
   }
-  return pclose(fOpenssl);
+  return ret;
 }
 
 bool isDecrypted(std::string file) {
@@ -81,7 +100,6 @@ int main(int argc, char *argv[]) {
   bool found = false;
   int ret = 0;
 
-  // NOTE john doesn't try the word as is in the wordlist when in single rules mode
   std::string johnCMD = john + " --wordlist=" + wordlist + " --rules=single --stdout";
   // std::string johnCMD = john + " --wordlist=" + wordlist + " --stdout";
   FILE* fJohn = popen(johnCMD.c_str(), "r");
@@ -92,9 +110,10 @@ int main(int argc, char *argv[]) {
       passbuf = 0;
     }
     pass.erase(std::remove(pass.begin(), pass.end(), '\n'), pass.end());
-    std::string md5CMD = "echo -n " + pass + " | md5sum > " + passFile;
+    std::string p = "'" + pass + "'";
+    std::string md5CMD = "echo -n " + p + " | md5sum > " + passFile;
 
-    FILE* fMd5 = popen(md5CMD.c_str(), "w");
+    FILE* fMd5 = popen(md5CMD.c_str(), "r");
     if (fMd5 == NULL) {
       std::cout << "fMd5 is a null pointer" << std::endl;
       exit(1);
