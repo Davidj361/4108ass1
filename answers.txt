@@ -20,3 +20,9 @@ minnesota.       (reymysterio)
 minnesot         (ricflair)
 Even when it ran for 2 days.
 
+
+
+Part 2
+======
+
+openssl reports that '9df3b01c60df20d13843841ff0d4482c' is not a bad password for practice_file.aes256.MD5.txt even though the correct password's hash for this file is: '0170d029f1c4a8734e5fede2429ea314'.
