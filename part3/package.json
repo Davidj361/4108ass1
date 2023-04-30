@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
-    "bhttp": "^1.2.4",
+    "bhttp": "^1.2.8",
     "bluebird": "^3.5.3",
     "cheerio": "^1.0.0-rc.2",
     "event-stream": "^4.0.1",
